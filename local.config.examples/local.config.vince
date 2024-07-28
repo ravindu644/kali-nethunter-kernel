@@ -1,0 +1,80 @@
+#!/bin/bash
+
+############################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Kernel Source:
+# git clone https://github.com/jwghjw/immortal_kernel_vince -b master --recursive
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+############################################################################################
+
+##############################################
+# Toolchains
+# Find more on https://kali.download/nethunter-images/toolchains/
+##############################################
+
+# Architecture (arm or arm64)
+export ARCH=arm64
+export SUBARCH=$ARCH
+TD="/usr"
+
+### Most arm64 kernels above version 4.x is fine with Clang.
+
+# Comment out this section if the above applies to your device.
+# Clang
+unset CLANG_ROOT
+unset CLANG_PATH
+unset LD_LIBRARY_PATH
+unset CLANG_TRIPLE
+unset CC
+unset CLANG_SRC
+
+### Recommended arm compiler (don't comment out as it will be always needed)
+# GCC 32bit (arm) source
+#CROSS_COMPILE_ARM32_SRC="gcc-arm-linux-gnueabi"
+#CROSS_COMPILE_ARM32_TYPE="apt install"
+function get_toolchain_arm () {
+	apt install gcc-arm-linux-gnueabi -y
+}
+
+# And it's path
+CCD32="${TD}"
+GCC_BIN32=${CCD32}/bin
+GCC_LIB32=${CCD32}/lib/arm-linux-gnueabi
+
+### Recommended arm64 compiler (comment out if you use clang)
+# GCC 64bit (arm64) source
+#CROSS_COMPILE_SRC="gcc-aarch64-linux-gnu"
+#CROSS_COMPILE_TYPE="apt install"
+function get_toolchain_arm64 () {
+	apt install gcc-aarch64-linux-gnu -y
+}
+
+# And it's path
+CCD="${TD}"
+GCC_BIN64=${CCD}/bin
+GCC_LIB64=${CCD}/lib/aarch64-linux-gnu
+GCC_LIBS=$GCC_LIB64:$GCC_LIB32
+GCC_BINS=$GCC_BIN64:$GCC_BIN32
+export LD_LIBRARY_PATH=$GCC_LIBS:$LD_LIBRARY_PATH
+export PATH=$GCC_BINS:$PATH
+export CROSS_COMPILE=aarch64-linux-gnu-
+export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+export CC=gcc
+
+function get_toolchains () {
+	get_toolchain_arm
+	get_toolchain_arm64
+}
+
+# Additional compiler arguments
+MAKE_ARGS="all firmware_install INSTALL_MOD_STRIP=1"
+
+# Speed up the build
+CCACHE=true
+
+# Name your kernel
+# Kernel local name
+export LOCALVERSION=
+
+# Some devices will have mismatch, to ignore errors uncomment the following line
+#MAKE_ARGS="CONFIG_NO_ERROR_ON_MISMATCH=y"
